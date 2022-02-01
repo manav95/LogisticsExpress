@@ -9,15 +9,15 @@ async function main() {
         }
 
         try {
-            await axios.post(`http://localhost:3405/${endpoint}`, message)
+            let axiosResp = await axios.post(`http://localhost:3405/${endpoint}`, message)
+            console.log("Posted: " + axiosResp.data);
         } catch (error) {
             console.error(error.code)
         }
-
     })
     try {
         let shipMsg = await axios.get('http://localhost:3405/shipments/S00001167')
-        console.log(shipMsg)
+        console.log("Get: " + shipMsg)
     } catch (error) {
         console.error(error.code)
     }
@@ -28,8 +28,8 @@ async function main() {
         console.error(error.code)
     }
     try {
-        let orgMsg = await axios.get('http://localhost:3405/shipments/POUNDS')
-        console.log(orgMsg)
+        let unitMsg = await axios.get('http://localhost:3405/shipments/POUNDS')
+        console.log(unitMsg)
     } catch (error) {
         console.error(error.code)
     }

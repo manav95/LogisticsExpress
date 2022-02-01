@@ -43,12 +43,12 @@ export class Shipment {
             if (err) {
                 return errCallback(err, undefined);
             }
-            else if (data.rows.length == 0) {
-                const sql = "INSERT INTO shipment(referenceId, organizations, estimatedTimeArrival, shipmentWeight) VALUES(?, ?, ?, ?)"
-                return db.run(sql, shipment.referenceId, shipment.organizations.join(), shipment.estimatedTimeArrival, shipment.shipmentWeight, nullCallback); 
+            else if (data && data.rows.length >= 1) {
+                return Shipment.update(shipment, updateCallback);
             }
             else {
-                return Shipment.update(shipment, updateCallback);
+                const sql = "INSERT INTO shipment(referenceId, organizations, estimatedTimeArrival, shipmentWeight) VALUES(?, ?, ?, ?)"
+                return db.run(sql, shipment.referenceId, shipment.organizations.join(), shipment.estimatedTimeArrival, shipment.shipmentWeight, nullCallback);
             }
         });
     }
@@ -78,12 +78,12 @@ export class Organization {
             if (err) {
                 return errorCallback();
             }
-            else if (data.rows == 0) {
-                const sql = "INSERT INTO organization(id, code) VALUES(?, ?)"
-                return db.run(sql, organization.id, organization.code, addCallback); 
+            else if (data && data.rows >= 1) {
+                return Organization.update(organization, updateCallback);
             }
             else {
-                return Organization.update(organization, updateCallback);
+                const sql = "INSERT INTO organization(id, code) VALUES(?, ?)"
+                return db.run(sql, organization.id, organization.code, addCallback); 
             }
         });
     }

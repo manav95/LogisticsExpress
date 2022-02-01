@@ -2,7 +2,7 @@ import { Connection, createConnection, getManager } from "typeorm";
 import "reflect-metadata";
 import express from 'express';
 import bodyParser from "body-parser";
-import { createDb, Organization, Shipment } from "entities";
+import { createDb, Organization, Shipment } from "./entities";
 
 const app = express()
 app.use(bodyParser.json());
@@ -10,31 +10,35 @@ const port = 3405;
 let connection: Connection;
 
 app.post('/shipment', async (req: any, res: any) => {
-   console.log("Shipment entered!");
    const shipment = req.body;
-   const totalWeight = shipment.transportPacks.nodes[0].totalWeight.weight + shipment.transportPacks.nodes[0].totalWeight.unit;
+   let totalWeight = "0POUNDS";
+   if (shipment.transportPacks.nodes[0]) {
+       totalWeight = shipment.transportPacks.nodes[0].totalWeight.weight + shipment.transportPacks.nodes[0].totalWeight.unit;
+   }
    const shipObj = new Shipment(shipment.referenceId, shipment.organizations, shipment.estimatedTimeArrival, totalWeight)
    const errorCallback = (err: any, data: any) => {
     if (err) {
-      res.status(500, 'Error in executing load');
+      res.status(500).send(err);
     }
    }
 
    const nullCallback = (err: any, data: any) => {
      if (err) {
-       res.status(500, 'Error');
+       res.status(500).send(err);
      }
      else {
-       res.status(200, data);
+      console.log(data);
+       res.status(200).send(data);
      }
    }
 
    const updateCallback = (err: any, data: any) => {
      if (err) {
-       res.status(500, "Error");
+      res.status(500).send(err);
      }
      else {
-       res.status(200, data);
+      console.log(data);
+      res.status(200).send(data);
      }
    }
 
@@ -42,30 +46,31 @@ app.post('/shipment', async (req: any, res: any) => {
 });
 
 app.post('/organization', async (req: any, res: any) => {
-   console.log("Organization loaded!");
    const org = req.body;
    const organization = new Organization(org.id, org.code);
    const errorCallback = (err: any, data: any) => {
     if (err) {
-      res.status(500, 'Error in executing load');
+      res.status(500).send('Error in executing load');
     }
    }
 
    const updateCallback = (err: any, data: any) => {
       if (err) {
-         res.status(500, "Error");
+        res.status(500).send(err);
       }
       else {
-         res.status(200, data);
+         console.log(data);
+         res.status(200).send(data);
       } 
     }
 
     const addCallback = (err: any, data: any) => {
       if (err) {
-         res.status(500, "Error");
+        res.status(500).send(err);
       }
       else {
-         res.status(200, data);
+        console.log(data);
+        res.status(200).send(data);
       } 
     }
 
@@ -74,40 +79,40 @@ app.post('/organization', async (req: any, res: any) => {
   
 
 app.get('/shipments/:shipmentId', async (req: any, res: any) => {
-   console.log("Handle shipments");
    const shipmentId = req.params["shipmentId"]
    Shipment.getShipment(shipmentId, (err: { message: any; }, result: any) => {
      if (err) {
        res.status(500).send(err.message);
      }
      else {
-       res.status(200).send(result.rows);
+       res.status(200).send(result);
      }
   });
 });
 
 app.get('/organizations/:organizationId', async (req: any, res: any) => {
   const organizationId = req.params["organizationId"]
-  Organization.getOrganization(organizationId, (err: { message: any; }, result: { rows: any; }) => {
+  Organization.getOrganization(organizationId, (err: any, data: any) => {
     if (err) {
       res.status(500).send(err.message);
     }
     else {
-      res.status(200).send(result.rows);
+      console.log(data);
+      res.status(200).send(data.rows);
     }
   })
 });
 
-app.get('/shipments/:unit', async (req: any, res: any) => {
+app.get('/shipments/totalWeight/:unit', async (req: any, res: any) => {
   const desiredUnit = req.params["unit"]
-  Shipment.calculateTotalWeight(desiredUnit, (err: { message: any; }, data: { rows: any; }) => {
+  Shipment.calculateTotalWeight((err: any, data: any) => {
     if (err) {
        res.status(500).send(err.message);
     }
     else {
       const resultData = data.rows;
       let sumData = 0.0;
-      resultData.forEach((row) => {
+      resultData.forEach((row: string) => {
           const theRow = row.split(/[^0-9]/);
           let value = Number(theRow[0]);
           const unit = theRow[1];
